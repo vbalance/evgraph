@@ -53,17 +53,17 @@ python main.py
 
 #### Odds Data (CSV)
 ```csv
-Time,Soft_Odds_Green,Fair_Odds_Red
-21:59:55,1.90,1.70
-22:01:53,2.00,1.72
-22:03:51,2.00,1.85
+Time,FairOdds,SoftOdds
+21:59:55,1.70,1.90
+22:01:53,1.72,2.00
+22:03:51,1.85,2.00
 ```
 
 #### Bets Data (CSV)
 ```csv
-Timestamp,Soft_Odds,Fair_Odds,EV,Acceptance_Time,Status
-22:01:55,2.00,1.72,16.3,20.0,Accepted
-22:15:38,3.00,2.82,6.4,25.0,Rejected
+Timestamp,FairOdds,SoftOdds,EV,AcceptanceTime,Status
+22:01:55,1.72,2.00,16.3,20.0,Accepted
+22:15:38,2.82,3.00,6.4,25.0,Rejected
 ```
 
 ## Technical Specifications
@@ -106,10 +106,13 @@ EV = (1 / Fair_Odds) × Soft_Odds - 1
 ## Project Structure
 ```
 EVGraph/
+├── INPUT/
+│   ├── odds_data.csv    # Odds history data
+│   └── bets_data.csv    # Bet attempts data
 ├── main.py              # Main visualization script
-├── README.md           # This file
-├── .gitignore          # Git ignore rules
-└── requirements.txt    # Python dependencies (optional)
+├── README.md            # This file
+├── .gitignore           # Git ignore rules
+└── requirements.txt     # Python dependencies
 ```
 
 ## Examples
