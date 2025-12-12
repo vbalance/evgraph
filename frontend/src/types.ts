@@ -1,0 +1,61 @@
+export interface BotSession {
+  id: number;
+  start_time: string;
+  end_time: string | null;
+  start_total_balance: number;
+  end_total_balance: number | null;
+  accounts_start_balance: Record<string, number>;
+  accounts_end_balance: Record<string, number>;
+  active_accounts: string[];
+  is_active: boolean;
+  odds_ranges: Record<string, number[][]> | null;
+  profit_percent: number | null;
+  profit_formula: string | null;
+  strategy: string | null;
+  max_bet: number | null;
+  total_bets?: number;
+  placed_bets?: number;
+}
+
+export interface BothubBet {
+  id: number;
+  bet_id: string;
+  profit: number;
+  koef: number;
+  avg_koef: number;
+  live_time: number;
+  home: string;
+  away: string;
+  pinnacle_event_id: number | null;
+  cloudbet_event_id: string | null;
+  sport_name: string | null;
+  sport_id: number | null;
+  league_name: string | null;
+  league_id: number | null;
+  market: string;
+  pinnacle_market: string;
+  probability: number;
+  pinnacle_score: string | null;
+  bookmaker_name: string;
+  period_id: number;
+  time: string;
+  status: string;
+  batch: number;
+  outcome_id: string | null;
+  api_key: string | null;
+  kelly_fraction: number | null;
+  online_koef: number | null;
+  bet_size: number | null;
+  strategy: string | null;
+  profit_formula: string | null;
+  real_bankroll: number | null;
+  virtual_bankroll: number | null;
+  bankroll_after_bet: number | null;
+  win_amount: number | null;
+  updated_at: string | null;
+  placed_at: string | null;
+  time_info: string | null;
+  event_url: string | null;
+  username: string | null;
+  event_time: string | null;
+}
