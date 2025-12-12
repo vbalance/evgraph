@@ -1,0 +1,42 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile_backend
+      args:
+        - BACKEND_PORT=${BACKEND_PORT:-8174}
+    container_name: evgraph-backend
+    ports:
+      - "${BACKEND_PORT:-8174}:${BACKEND_PORT:-8174}"
+    env_file:
+      - .env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "sh", "-c", "python -c \"import requests, os; requests.get(f'http://localhost:{os.environ.get(\\\"BACKEND_PORT\\\", \\\"8174\\\")}/health')\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile_frontend
+      args:
+        - VITE_API_BASE_URL=${VITE_API_BASE_URL:-/api}
+        - BACKEND_PORT=${BACKEND_PORT:-8174}
+    container_name: evgraph-frontend
+    ports:
+      - "5174:80"
+    env_file:
+      - .env
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s

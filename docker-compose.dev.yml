@@ -1,0 +1,44 @@
+# Development docker-compose with hot-reload
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile_backend
+      target: builder  # Use builder stage for development
+      args:
+        - BACKEND_PORT=${BACKEND_PORT:-8174}
+    container_name: evgraph-backend-dev
+    command: sh -c "uvicorn api.main:app --host $${BACKEND_HOST:-0.0.0.0} --port $${BACKEND_PORT:-8174} --reload"
+    ports:
+      - "${BACKEND_PORT:-8174}:${BACKEND_PORT:-8174}"
+    environment:
+      - UV_NO_DEV=0  # Include dev dependencies
+    env_file:
+      - .env
+    volumes:
+      # Bind mount for hot-reload
+      - .:/app
+      - /app/.venv  # Exclude venv from sync
+    restart: unless-stopped
+
+  frontend:
+    image: node:22-alpine
+    container_name: evgraph-frontend-dev
+    working_dir: /app
+    command: npm run dev -- --host 0.0.0.0 --port 5174
+    ports:
+      - "5174:5174"
+    environment:
+      - NODE_ENV=development
+    env_file:
+      - .env
+    volumes:
+      # Bind mount for hot-reload
+      - ./frontend:/app
+      - /app/node_modules  # Exclude node_modules from sync
+    restart: unless-stopped
+    depends_on:
+      - backend
+
+volumes:
+  backend_cache:

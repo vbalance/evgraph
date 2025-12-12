@@ -1,6 +1,7 @@
 import type {BotSession, BothubBet, EVBet} from './types';
 
-const API_BASE_URL = 'http://localhost:8000/api';
+// Use environment variable or fallback to relative path (works via nginx proxy)
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 export async function fetchSessions(limit: number = 1000, includeStats: boolean = true): Promise<BotSession[]> {
   const response = await fetch(`${API_BASE_URL}/sessions?limit=${limit}&include_stats=${includeStats}`);

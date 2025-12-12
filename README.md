@@ -1,151 +1,300 @@
-# EVGraph - Expected Value Visualization Tool
+# EVGraph - EV Betting Analytics Dashboard
 
-A sophisticated visualization tool for analyzing betting odds opportunities with positive Expected Value (EV+). The tool provides gradient-based visualization of profit opportunities, lifetime tracking, and bet acceptance analysis.
+Веб-застосунок для аналізу та візуалізації даних ставок з позитивним математичним очікуванням (Expected Value). Включає інтерактивні графіки EV в часі, деталізовану інформацію про ставки та сесії.
 
-## Features
+## 🎯 Основні можливості
 
-### 1. Gradient Visualization
-- **EV+ Detection**: Automatically identifies and visualizes positions where soft bookmaker odds exceed fair odds
-- **Layered Gradient**: Creates visual depth through 1% EV layers with progressive transparency
-- **Dynamic Scaling**: Gradients adapt to each time segment's individual EV value
-- **10% EV Threshold**: Special handling for high-value opportunities (≥10% EV)
+### Аналіз сесій
+- Перегляд всіх bot sessions з статистикою
+- Загальна кількість ставок та успішно розміщених
+- Час початку та завершення кожної сесії
 
-### 2. Comprehensive Metrics
-- **Soft Odds**: Bookmaker's offered odds (green line)
-- **Fair Odds**: Calculated fair market odds (red line)
-- **EV Percentage**: Expected value as a percentage
-- **Lifetime**: Duration until next odds change
+### Деталізація ставок
+- Таблиця всіх ставок по сесії з сортуванням
+- Інформація про подію (спорт, ліга, команди)
+- Коефіцієнти (odds, fair odds), EV%, статус, розмір ставки
 
-### 3. Bet Tracking
-- **Acceptance Visualization**: Color-coded "barrels" showing bet acceptance attempts
-  - Blue: Accepted bets
-  - Yellow: Rejected bets
-- **Acceptance Time**: Visual representation of processing duration
-- **Detailed Annotations**: Comprehensive information for each betting attempt
+### Інтерактивні графіки EV
+- **Zoom & Pan**: Колесо миші для зуму, перетягування для навігації
+- **Кольорові маркери точок**:
+  - 🟨 Жовта велика точка - поява EV ставки
+  - 🟩 Зелена велика точка - розміщена ставка
+  - 🔴 Червона точка - suspended (Pinnacle або букмекер)
+  - 🔵 Синя точка - нормальний стан
+- **Вертикальні лінії**:
+  - 🟦 Синя - початок сесії
+  - 🟥 Червона - кінець сесії
+- **Червоні горизонтальні лінії**: з'єднують точки з EV ≥ 5%, де koef не падає протягом 4 секунд
+- **Детальний tooltip**: при наведенні показує всі дані точки (EV, odds, fair odds, pinnacle odds, статуси)
+- **Fullscreen режим** для детального аналізу
 
-### 4. Advanced Features
-- **Data Gaps Handling**: Graceful handling of missing data with NaN values
-- **Multi-level Annotations**: Automatic positioning to prevent label overlap
-- **EV Grid Lines**: Horizontal lines showing EV percentage levels
-- **Time-based Navigation**: Clear timestamp markers for all data points
+## 🏗️ Технології
 
-## Installation
+### Backend
+- **FastAPI** - швидкий асинхронний API framework
+- **SQLModel** - ORM для роботи з PostgreSQL
+- **Uvicorn** - ASGI server
+- **Python 3.12** - з UV package manager
 
-### Requirements
+### Frontend
+- **React 19** - UI бібліотека
+- **TypeScript** - типізація
+- **Vite** - build tool
+- **React Router** - маршрутизація
+- **Recharts** - інтерактивні графіки
+- **Tailwind CSS 4** - стилізація
+
+### Infrastructure
+- **Docker** - контейнеризація
+- **Nginx** - reverse proxy для production
+- **PostgreSQL** - віддалена база даних
+
+## 🚀 Швидкий старт
+
+### Вимоги
+- Docker та Docker Compose
+- Git
+
+### 1. Клонувати репозиторій
 ```bash
-pip install matplotlib pandas numpy
-```
-
-### Clone Repository
-```bash
-git clone git@github.com:vbalance/evgraph.git
+git clone <repository-url>
 cd evgraph
 ```
 
-## Usage
-
-### Basic Usage
+### 2. Налаштувати .env
 ```bash
-python example.py
+cp .env.example .env
+# Відредагувати .env з вашими даними бази
+nano .env
 ```
 
-### Data Format
+Приклад `.env`:
+```bash
+# PostgreSQL Remote Database
+POSTGRES_DB=your_database
+POSTGRES_USER=your_user
+POSTGRES_PASSWORD=your_password
+POSTGRES_HOST=your_host
+POSTGRES_PORT=5432
 
-#### Odds Data (CSV)
-```csv
-Time,FairOdds,SoftOdds
-21:59:55,1.70,1.90
-22:01:53,1.72,2.00
-22:03:51,1.85,2.00
+# Backend Configuration
+BACKEND_PORT=8174
+BACKEND_HOST=0.0.0.0
+
+# Frontend Configuration
+VITE_API_BASE_URL=/api
 ```
 
-#### Bets Data (CSV)
-```csv
-Timestamp,FairOdds,SoftOdds,EV,AcceptanceTime,Status
-22:01:55,1.72,2.00,16.3,20.0,Accepted
-22:15:38,2.82,3.00,6.4,25.0,Rejected
+### 3. Запустити в Docker
+
+#### Production
+```bash
+docker compose up -d
 ```
 
-## Technical Specifications
-
-### EV Calculation
-```
-EV = (1 / Fair_Odds) × Soft_Odds - 1
+#### Development (з hot-reload)
+```bash
+docker compose -f docker-compose.dev.yml up -d
 ```
 
-### Gradient Algorithm
-1. **Layered Approach**: Each 1% EV creates a separate visual layer
-2. **Alpha Progression**: `alpha = 0.1 + (ev_threshold × 7)` for EV ≤ 10%
-3. **Maximum Density**: Alpha capped at 0.80 for EV > 10%
-4. **Boundary Clipping**: All layers clipped to Soft Odds upper limit
+### 4. Відкрити в браузері
 
-### Visualization Layers (zorder)
-- Grid lines: 1
-- Gradient fill: 2
-- Fair Odds line: 3
-- Soft Odds line: 4
-- Data points: 5
-- Bet barrels: 6
-- Annotations: 10-11
+**Production:**
+- Frontend: http://localhost:5174
+- Backend API: http://localhost:8174
+- API Docs: http://localhost:8174/docs
 
-## Configuration
+**Development:**
+- Frontend (Vite): http://localhost:5174
+- Backend API: http://localhost:8174
 
-### Graph Styling
-- Theme: Dark background
-- Figure size: 14×8
-- Time format: HH:MM:SS
-- Grid: Dashed, 0.5 width, 20% opacity
+## 📁 Структура проекту
 
-### Colors
-- Fair Odds: `#ff3333` (Red)
-- Soft Odds: `#00ff00` (Green)
-- EV+ Gradient: `#00ff00` (Green with varying alpha)
-- Accepted Bets: `#00BFFF` (Deep Sky Blue)
-- Rejected Bets: `#FFD700` (Gold)
-
-## Project Structure
 ```
-EVGraph/
-├── INPUT/
-│   ├── odds_data.csv    # Odds history data
-│   └── bets_data.csv    # Bet attempts data
-├── example.py              # Main visualization script
-├── README.md            # This file
-├── .gitignore           # Git ignore rules
-└── requirements.txt     # Python dependencies
+evgraph/
+├── api/                      # Backend (FastAPI)
+│   ├── main.py              # FastAPI app
+│   ├── routes.py            # API endpoints
+│   ├── models.py            # SQLModel models
+│   ├── crud.py              # Database operations
+│   ├── db.py                # Database connection
+│   └── config.py            # Configuration
+├── frontend/                 # Frontend (React)
+│   ├── src/
+│   │   ├── components/      # React компоненти
+│   │   ├── api.ts           # API client
+│   │   ├── types.ts         # TypeScript типи
+│   │   └── App.tsx          # Головний компонент
+│   ├── package.json
+│   └── vite.config.ts
+├── Dockerfile_backend        # Backend Docker image
+├── Dockerfile_frontend       # Frontend Docker image
+├── docker-compose.yml        # Production compose
+├── docker-compose.dev.yml    # Development compose
+├── .env                      # Environment variables
+├── .dockerignore
+├── pyproject.toml            # Python dependencies (UV)
+├── uv.lock
+└── README.md
 ```
 
-## Examples
+## 🛠️ Docker команди
 
-### Gradient Behavior
-- **EV = 2.4%**: 2 gradient layers (1%, 2%)
-- **EV = 8.1%**: 8 gradient layers (1%-8%)
-- **EV = 11.8%**: 11 gradient layers (1%-10% progressive, 11% at max opacity)
-- **EV = 16.3%**: 16 gradient layers (1%-10% progressive, 11%-16% at max opacity)
+### Запуск
+```bash
+# Production
+docker compose up -d
 
-### Bet Acceptance Flow
-1. Bet attempt detected at timestamp
-2. Barrel drawn at Soft Odds level
-3. Length represents acceptance time
-4. Vertical markers show start/end
-5. Annotation displays result and metrics
+# Development
+docker compose -f docker-compose.dev.yml up -d
 
-## Contributing
+# Переглянути логи
+docker compose logs -f
 
-This is a specialized tool for value betting analysis. Contributions welcome for:
-- Additional visualization modes
-- Enhanced data import/export
-- Real-time data integration
-- Statistical analysis features
+# Переглянути логи конкретного сервісу
+docker compose logs -f backend
+docker compose logs -f frontend
+```
 
-## License
+### Зупинка
+```bash
+docker compose down
 
-MIT License - Feel free to use and modify for your betting analysis needs.
+# Видалити контейнери та volumes
+docker compose down -v
+```
 
-## Author
+### Перебудова
+```bash
+# Перебудувати всі образи
+docker compose build
 
-Valerii Volkov
+# Перебудувати конкретний сервіс
+docker compose build backend
 
-## Generated With
+# Перебудувати без кешу
+docker compose build --no-cache
+```
 
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
+### Виконання команд
+```bash
+# Backend shell
+docker compose exec backend bash
+
+# Frontend shell
+docker compose exec frontend sh
+
+# Виконати Python команду
+docker compose exec backend python -c "print('Hello')"
+```
+
+## 🌐 Доступ з інших пристроїв
+
+Застосунок можна відкрити з будь-якого пристрою в мережі:
+
+```
+http://<server-ip>:5174
+```
+
+де `<server-ip>` - IP адреса сервера (наприклад `192.168.1.100`)
+
+API запити автоматично проксуються через nginx на backend.
+
+## 💻 Локальна розробка (без Docker)
+
+### Backend
+```bash
+# Встановити UV package manager
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Встановити залежності
+uv sync
+
+# Запустити backend
+uv run uvicorn api.main:app --reload --port 8174
+```
+
+### Frontend
+```bash
+cd frontend
+
+# Встановити залежності
+npm install
+
+# Створити .env.local для локальної розробки
+echo "VITE_API_BASE_URL=http://localhost:8174/api" > .env.local
+
+# Запустити dev server
+npm run dev
+```
+
+Відкрити http://localhost:5174
+
+## 📊 API Endpoints
+
+### Sessions
+- `GET /api/sessions` - Список всіх сесій з статистикою
+- `GET /api/sessions/{session_id}` - Деталі конкретної сесії
+- `GET /api/sessions/{session_id}/bets` - Ставки по сесії
+
+### Bets
+- `GET /api/bets?bet_id={bet_id}` - Деталі конкретної ставки
+- `GET /api/bets/ev?bet_id={bet_id}` - EV історія для ставки
+
+### Health
+- `GET /health` - Health check endpoint
+
+Повна документація: http://localhost:8174/docs
+
+## 🔧 Налаштування
+
+### Зміна портів
+
+Відредагуйте `.env`:
+```bash
+BACKEND_PORT=9000
+VITE_API_BASE_URL=/api
+```
+
+Перезбудуйте:
+```bash
+docker compose down
+docker compose up --build -d
+```
+
+### Підключення до іншої бази даних
+
+Оновіть `POSTGRES_*` змінні в `.env` та перезапустіть контейнери.
+
+## 🐛 Troubleshooting
+
+### Backend не може підключитися до БД
+Перевірте credentials в `.env` та доступність бази даних:
+```bash
+docker compose logs backend
+```
+
+### Frontend не може підключитися до backend
+Переконайтеся що `VITE_API_BASE_URL=/api` в `.env` та перебудуйте frontend:
+```bash
+docker compose build frontend
+docker compose up -d frontend
+```
+
+### Порт вже зайнятий
+Змініть порти в `.env` або зупиніть конфліктуючий процес:
+```bash
+# Знайти процес на порту 8174
+lsof -ti:8174
+
+# Вбити процес
+lsof -ti:8174 | xargs kill -9
+```
+
+## 📝 Ліцензія
+
+MIT License
+
+## 👤 Автор
+
+Arsen Makovei
