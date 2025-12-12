@@ -9,6 +9,7 @@ from api.crud import (
     get_ev_bets_by_bet,
 )
 from api.db import get_session
+from api.models import BothubBet, BotSession
 
 router = APIRouter()
 
@@ -41,28 +42,40 @@ async def get_sessions(
     return sessions
 
 
+@router.get("/sessions/{session_id}")
+async def get_session_by_id(
+    session_id: int, db: AsyncSession = Depends(get_session)
+) -> dict:
+    """Get a specific session by ID"""
+    bot_session = await db.get(BotSession, session_id)
+    if not bot_session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    return bot_session.model_dump(mode="json")
+
+
 @router.get("/sessions/{session_id}/bets")
 async def get_bets_for_session(
     session_id: int, limit: int | None = 1000, db: AsyncSession = Depends(get_session)
 ) -> list[dict]:
     """Get all bothub_bets for a specific session"""
-    return await get_session_bets(db, session_id=session_id, limit=limit)
+    bets = await get_session_bets(db, session_id=session_id, limit=limit)
+    return bets
 
 
-@router.get("/bets/{bet_id}")
+@router.get("/bets")
 async def get_bet(bet_id: str, db: AsyncSession = Depends(get_session)) -> dict:
-    """Get a specific bothub_bet by bet_id"""
+    """Get a specific bothub_bet by bet_id (query param)"""
     bet = await get_bothub_bet_by_bet_id(db, bet_id=bet_id)
     if not bet:
         raise HTTPException(status_code=404, detail="Bet not found")
-    return bet.model_dump()
+    return bet.model_dump(mode="json")
 
 
-@router.get("/bets/{bet_id}/ev")
+@router.get("/bets/ev")
 async def get_ev_bets_for_bet(
     bet_id: str, db: AsyncSession = Depends(get_session)
 ) -> list[dict]:
-    """Get all ev_bets records for a specific bothub_bet"""
+    """Get all ev_bets records for a specific bothub_bet by bet_id (query param)"""
     bet = await get_bothub_bet_by_bet_id(db, bet_id=bet_id)
     if not bet:
         raise HTTPException(status_code=404, detail="Bet not found")

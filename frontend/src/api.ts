@@ -1,4 +1,4 @@
-import type {BotSession, BothubBet} from './types';
+import type {BotSession, BothubBet, EVBet} from './types';
 
 const API_BASE_URL = 'http://localhost:8000/api';
 
@@ -6,6 +6,14 @@ export async function fetchSessions(limit: number = 1000, includeStats: boolean 
   const response = await fetch(`${API_BASE_URL}/sessions?limit=${limit}&include_stats=${includeStats}`);
   if (!response.ok) {
     throw new Error('Failed to fetch sessions');
+  }
+  return response.json();
+}
+
+export async function fetchSession(sessionId: number): Promise<BotSession> {
+  const response = await fetch(`${API_BASE_URL}/sessions/${sessionId}`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch session');
   }
   return response.json();
 }
@@ -22,15 +30,15 @@ export async function fetchSessionBets(sessionId: number, limit?: number): Promi
 }
 
 export async function fetchBet(betId: string): Promise<BothubBet> {
-  const response = await fetch(`${API_BASE_URL}/bets/${betId}`);
+  const response = await fetch(`${API_BASE_URL}/bets?bet_id=${encodeURIComponent(betId)}`);
   if (!response.ok) {
     throw new Error('Failed to fetch bet');
   }
   return response.json();
 }
 
-export async function fetchEvBets(betId: string): Promise<any[]> {
-  const response = await fetch(`${API_BASE_URL}/bets/${betId}/ev`);
+export async function fetchEvBets(betId: string): Promise<EVBet[]> {
+  const response = await fetch(`${API_BASE_URL}/bets/ev?bet_id=${encodeURIComponent(betId)}`);
   if (!response.ok) {
     throw new Error('Failed to fetch EV bets');
   }

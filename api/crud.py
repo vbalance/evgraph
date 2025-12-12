@@ -19,7 +19,7 @@ async def get_all_bot_sessions(db: AsyncSession, limit: int = 1000) -> list[dict
         result = await db.execute(query)
         sessions = result.scalars().all()
 
-        return [session.model_dump() for session in sessions]
+        return [session.model_dump(mode='json') for session in sessions]
     except Exception as e:
         logger.error(f"Error in get_all_bot_sessions: {e}")
         return []
@@ -130,7 +130,7 @@ async def get_session_bets(
         result = await db.execute(query)
         bets = result.scalars().all()
 
-        return [bet.model_dump() for bet in bets]
+        return [bet.model_dump(mode='json') for bet in bets]
     except Exception as e:
         logger.error(f"Error in get_session_bets: {e}")
         return []
@@ -165,7 +165,7 @@ async def get_ev_bets_by_bet(db: AsyncSession, bet: BothubBet) -> list[dict]:
         result = await db.execute(query)
         ev_bets = result.scalars().all()
 
-        return [ev_bet.model_dump() for ev_bet in ev_bets]
+        return [ev_bet.model_dump(mode='json') for ev_bet in ev_bets]
     except Exception as e:
         logger.error(f"Error in get_ev_bets_by_bet: {e}")
         return []

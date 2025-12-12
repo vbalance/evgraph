@@ -59,3 +59,40 @@ export interface BothubBet {
   username: string | null;
   event_time: string | null;
 }
+
+export interface EVBet {
+  id: number;
+  bet_id: string;
+  profit: number;
+  avg_koef: number;
+  koef: number | null;
+  pinnacle_koef: number | null;
+  live_time: number;
+  pinnacle_event_id: number | null;
+  cloudbet_event_id: string | null;
+  sport_name: string | null;
+  sport_id: number | null;
+  event_name: string | null;
+  league_name: string | null;
+  league_id: number | null;
+  market: string;
+  pinnacle_market: string;
+  probability: number;
+  ev_no_vig: number;
+  pinnacle_score: string | null;
+  bookmaker_name: string;
+  period_id: number | null;
+  time: string;
+  status: string;
+  batch: number;
+  home: string;
+  away: string;
+  reverse_koef1: number | null;
+  reverse_fair_koef1: number | null;
+  reverse_koef2: number | null;
+  reverse_fair_koef2: number | null;
+  event_url: string | null;
+  event_time: string | null;
+  pinnacle_suspended: boolean | null;
+  bookmaker_suspended: boolean | null;
+}

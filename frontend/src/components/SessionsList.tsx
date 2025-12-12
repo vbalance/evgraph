@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import type { BotSession } from '../types';
 import { fetchSessions } from '../api';
 
@@ -58,9 +59,10 @@ export default function SessionsList() {
       <h2 className="text-2xl font-bold text-blue-200 mb-4">Sessions</h2>
       <div className="max-h-150 overflow-y-auto space-y-3 pr-2">
         {sessions.map((session) => (
-          <div
+          <Link
             key={session.id}
-            className="bg-slate-700/60 rounded-lg p-4 hover:bg-slate-700/80 transition-colors border border-slate-600/50"
+            to={`/session/${session.id}`}
+            className="block bg-slate-700/60 rounded-lg p-4 hover:bg-slate-700/80 transition-colors border border-slate-600/50 cursor-pointer"
           >
             <div className="flex justify-between items-start mb-2">
               <div className="text-blue-300 font-semibold text-lg">
@@ -96,7 +98,7 @@ export default function SessionsList() {
                 </div>
               </div>
             )}
-          </div>
+          </Link>
         ))}
 
         {sessions.length === 0 && (
