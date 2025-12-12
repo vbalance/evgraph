@@ -46,7 +46,7 @@ cd evgraph
 
 ### Basic Usage
 ```bash
-python main.py
+python example.py
 ```
 
 ### Data Format
@@ -109,7 +109,7 @@ EVGraph/
 ├── INPUT/
 │   ├── odds_data.csv    # Odds history data
 │   └── bets_data.csv    # Bet attempts data
-├── main.py              # Main visualization script
+├── example.py              # Main visualization script
 ├── README.md            # This file
 ├── .gitignore           # Git ignore rules
 └── requirements.txt     # Python dependencies
