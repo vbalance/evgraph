@@ -1,8 +1,35 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { XAxis, YAxis, CartesianGrid, Tooltip, Legend, ReferenceLine, ResponsiveContainer, Line, LineChart } from 'recharts';
 import type { BothubBet, EVBet, BotSession } from '../types';
 import { fetchBet, fetchEvBets, fetchSession } from '../api';
+import * as React from "react";
+
+// Types for chart components
+interface TooltipProps {
+  active?: boolean;
+  payload?: Array<{
+    payload: {
+      label: string;
+      profit: number;
+      koef: number | null;
+      fairOdds: number;
+      pinnacleOdds: number | null;
+      pinnacle_suspended: boolean | null;
+      bookmaker_suspended: boolean | null;
+    };
+  }>;
+}
+
+interface DotProps {
+  cx?: number;
+  cy?: number;
+  payload?: {
+    time: number;
+    pinnacle_suspended: boolean | null;
+    bookmaker_suspended: boolean | null;
+  };
+}
 
 export default function BetDetails() {
   const [searchParams] = useSearchParams();
@@ -21,13 +48,33 @@ export default function BetDetails() {
   const [dragStartIndexes, setDragStartIndexes] = useState<{ startIndex: number; endIndex: number } | null>(null);
   const [isMouseOverChart, setIsMouseOverChart] = useState(false);
 
-  useEffect(() => {
-    if (betId) {
-      loadBetDetails();
-    }
-  }, [betId]);
+  const loadBetDetails = useCallback(async () => {
+    if (!betId) return;
 
-  // Initialize brush with full data range when chartData loads
+    try {
+      setLoading(true);
+      const betData = await fetchBet(betId);
+      const evBetsData = await fetchEvBets(betId);
+      setBet(betData);
+      setEvBets(evBetsData);
+
+      // Load session data if session_id is provided
+      if (sessionId) {
+        const sessionData = await fetchSession(Number(sessionId));
+        setSession(sessionData);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setLoading(false);
+    }
+  }, [betId, sessionId]);
+
+  useEffect(() => {
+    void loadBetDetails();
+  }, [loadBetDetails]);
+
+  // Initialize brush with the full data range when chartData loads
   useEffect(() => {
     if (evBets.length > 0 && brushIndexes === null) {
       // Will be set after chartData is computed
@@ -56,25 +103,6 @@ export default function BetDetails() {
     };
   }, [isMouseOverChart]);
 
-  async function loadBetDetails() {
-    try {
-      setLoading(true);
-      const betData = await fetchBet(betId!);
-      const evBetsData = await fetchEvBets(betId!);
-      setBet(betData);
-      setEvBets(evBetsData);
-
-      // Load session data if session_id is provided
-      if (sessionId) {
-        const sessionData = await fetchSession(Number(sessionId));
-        setSession(sessionData);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
-    } finally {
-      setLoading(false);
-    }
-  }
 
   function formatDateTime(dateStr: string | null) {
     if (!dateStr) return 'N/A';
@@ -152,7 +180,7 @@ export default function BetDetails() {
         const currentKoef = chartData[j].koef;
 
         // Continue if time diff <= 4 seconds AND koef is not decreasing
-        if (timeDiff <= 4000 && currentKoef >= prevKoef) {
+        if (timeDiff <= 4000 && currentKoef !== null && prevKoef !== null && currentKoef >= prevKoef) {
           segmentEndIndex = j;
           prevKoef = currentKoef;
         } else {
@@ -174,7 +202,7 @@ export default function BetDetails() {
   }
 
   // Custom tooltip component
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({ active, payload }: TooltipProps) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
 
@@ -233,8 +261,13 @@ export default function BetDetails() {
   };
 
   // Custom dot shape with special handling for key events
-  const CustomDot = (props: any) => {
+  const CustomDot = (props: DotProps) => {
     const { cx, cy, payload } = props;
+
+    // Early return if no payload
+    if (!payload) {
+      return <circle cx={cx} cy={cy} r={3} fill="#60a5fa" />;
+    }
 
     // Check if this point exactly matches betTime (EV Bet Appeared)
     const isAppearedPoint = payload.time === betTime;
@@ -268,6 +301,22 @@ export default function BetDetails() {
     );
   };
 
+  const calculateZoomBounds = (center: number, newRange: number, maxLength: number) => {
+    let newStart = Math.max(0, center - Math.floor(newRange / 2));
+    let newEnd = Math.min(maxLength - 1, center + Math.floor(newRange / 2));
+
+    // Adjust if we hit boundaries
+    if (newEnd - newStart < newRange) {
+      if (newStart === 0) {
+        newEnd = Math.min(maxLength - 1, newStart + newRange);
+      } else if (newEnd === maxLength - 1) {
+        newStart = Math.max(0, newEnd - newRange);
+      }
+    }
+
+    return { startIndex: newStart, endIndex: newEnd };
+  };
+
   const resetZoom = () => {
     if (evBets.length > 0) {
       setBrushIndexes({ startIndex: 0, endIndex: evBets.length - 1 });
@@ -281,19 +330,8 @@ export default function BetDetails() {
     const newRange = Math.max(10, Math.floor(currentRange * 0.5)); // Zoom in by 50%, minimum 10 points
     const center = Math.floor((brushIndexes.startIndex + brushIndexes.endIndex) / 2);
 
-    let newStart = Math.max(0, center - Math.floor(newRange / 2));
-    let newEnd = Math.min(evBets.length - 1, center + Math.floor(newRange / 2));
-
-    // Adjust if we hit boundaries
-    if (newEnd - newStart < newRange) {
-      if (newStart === 0) {
-        newEnd = Math.min(evBets.length - 1, newStart + newRange);
-      } else if (newEnd === evBets.length - 1) {
-        newStart = Math.max(0, newEnd - newRange);
-      }
-    }
-
-    setBrushIndexes({ startIndex: newStart, endIndex: newEnd });
+    const bounds = calculateZoomBounds(center, newRange, evBets.length);
+    setBrushIndexes(bounds);
   };
 
   const zoomOut = () => {
@@ -303,23 +341,13 @@ export default function BetDetails() {
     const newRange = Math.min(evBets.length - 1, Math.floor(currentRange * 2)); // Zoom out by 2x
     const center = Math.floor((brushIndexes.startIndex + brushIndexes.endIndex) / 2);
 
-    let newStart = Math.max(0, center - Math.floor(newRange / 2));
-    let newEnd = Math.min(evBets.length - 1, center + Math.floor(newRange / 2));
-
-    // Adjust if we hit boundaries
-    if (newEnd - newStart < newRange) {
-      if (newStart === 0) {
-        newEnd = Math.min(evBets.length - 1, newStart + newRange);
-      } else if (newEnd === evBets.length - 1) {
-        newStart = Math.max(0, newEnd - newRange);
-      }
-    }
+    const bounds = calculateZoomBounds(center, newRange, evBets.length);
 
     // If we've zoomed out to full range, reset
-    if (newStart === 0 && newEnd === evBets.length - 1) {
+    if (bounds.startIndex === 0 && bounds.endIndex === evBets.length - 1) {
       setBrushIndexes({ startIndex: 0, endIndex: evBets.length - 1 });
     } else {
-      setBrushIndexes({ startIndex: newStart, endIndex: newEnd });
+      setBrushIndexes(bounds);
     }
   };
 
@@ -327,7 +355,7 @@ export default function BetDetails() {
     if (!brushIndexes || evBets.length === 0) return;
 
     const range = brushIndexes.endIndex - brushIndexes.startIndex;
-    const panAmount = Math.max(1, Math.floor(range * 0.25)); // Pan by 25% of current range
+    const panAmount = Math.max(1, Math.floor(range * 0.25)); // Pan by 25% of the current range
 
     const newStart = Math.max(0, brushIndexes.startIndex - panAmount);
     const newEnd = newStart + range;
@@ -341,7 +369,7 @@ export default function BetDetails() {
     if (!brushIndexes || evBets.length === 0) return;
 
     const range = brushIndexes.endIndex - brushIndexes.startIndex;
-    const panAmount = Math.max(1, Math.floor(range * 0.25)); // Pan by 25% of current range
+    const panAmount = Math.max(1, Math.floor(range * 0.25)); // Pan by 25% of the current range
 
     const newEnd = Math.min(evBets.length - 1, brushIndexes.endIndex + panAmount);
     const newStart = newEnd - range;
@@ -412,7 +440,7 @@ export default function BetDetails() {
     let newRange = Math.floor(currentRange * zoomFactor);
     newRange = Math.max(10, Math.min(chartData.length - 1, newRange)); // Clamp between 10 and max
 
-    // Calculate new start and end, keeping the mouse position fixed
+    // Calculate a new start and end, keeping the mouse position fixed
     const leftPoints = Math.floor((mouseDataIndex - brushIndexes.startIndex) * (newRange / currentRange));
     let newStart = mouseDataIndex - leftPoints;
     let newEnd = newStart + newRange;
@@ -482,7 +510,7 @@ export default function BetDetails() {
 
             {/* Red horizontal lines for EV >= 5% segments */}
             {evSegments.map((segment, index) => {
-              // Check if segment overlaps with visible data range
+              // Check if a segment overlaps with visible data range
               const dataMin = displayData.length > 0 ? displayData[0].time : 0;
               const dataMax = displayData.length > 0 ? displayData[displayData.length - 1].time : 0;
 

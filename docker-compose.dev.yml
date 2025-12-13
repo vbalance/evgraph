@@ -4,7 +4,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile_backend
-      target: builder  # Use builder stage for development
+      target: builder  # Use the builder stage for development
       args:
         - BACKEND_PORT=${BACKEND_PORT:-8174}
     container_name: evgraph-backend-dev

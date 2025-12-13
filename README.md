@@ -34,7 +34,7 @@
 - **FastAPI** - швидкий асинхронний API framework
 - **SQLModel** - ORM для роботи з PostgreSQL
 - **Uvicorn** - ASGI server
-- **Python 3.12** - з UV package manager
+- **Python 3.12** – з UV package manager
 
 ### Frontend
 - **React 19** - UI бібліотека
@@ -46,7 +46,7 @@
 
 ### Infrastructure
 - **Docker** - контейнеризація
-- **Nginx** - reverse proxy для production
+- **Nginx** – reverse proxy для production
 - **PostgreSQL** - віддалена база даних
 
 ## 🚀 Швидкий старт

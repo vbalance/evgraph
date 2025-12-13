@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import type { BothubBet, BotSession } from '../types';
 import { fetchSessionBets, fetchSession } from '../api';
+import * as React from "react";
 
 type SortField = keyof BothubBet | 'acceptance_time';
 type SortDirection = 'asc' | 'desc';
@@ -16,13 +17,9 @@ export default function SessionBetsTable() {
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
-  useEffect(() => {
-    if (sessionId) {
-      loadBets();
-    }
-  }, [sessionId]);
+  const loadBets = useCallback(async () => {
+    if (!sessionId) return;
 
-  async function loadBets() {
     try {
       setLoading(true);
       const data = await fetchSessionBets(Number(sessionId));
@@ -34,7 +31,11 @@ export default function SessionBetsTable() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [sessionId]);
+
+  useEffect(() => {
+    void loadBets();
+  }, [loadBets]);
 
   function formatDateTime(dateStr: string | null) {
     if (!dateStr) return 'N/A';
@@ -60,7 +61,7 @@ export default function SessionBetsTable() {
         return `${parsed.place_bet.toFixed(3)}s`;
       }
     } catch {
-      // If parsing fails, return original
+      // If parsing fails, return the original
     }
     return 'N/A';
   }
@@ -106,8 +107,8 @@ export default function SessionBetsTable() {
   const sortedBets = [...bets].sort((a, b) => {
     if (!sortField) return 0;
 
-    let aValue: any;
-    let bValue: any;
+    let aValue: BothubBet[keyof BothubBet] | number;
+    let bValue: BothubBet[keyof BothubBet] | number;
 
     if (sortField === 'acceptance_time') {
       aValue = getPlaceBetTimeValue(a.time_info);

@@ -9,7 +9,7 @@ from api.crud import (
     get_ev_bets_by_bet,
 )
 from api.db import get_session
-from api.models import BothubBet, BotSession
+from api.models import BotSession
 
 router = APIRouter()
 
@@ -26,7 +26,7 @@ async def get_sessions(
     if not include_stats or not sessions:
         return sessions
 
-    # Get statistics for all sessions in optimized way
+    # Get statistics for all sessions in an optimized way
     session_ids = [s["id"] for s in sessions]
     stats = await get_sessions_stats(db, session_ids)
 
@@ -50,7 +50,7 @@ async def get_session_by_id(
     bot_session = await db.get(BotSession, session_id)
     if not bot_session:
         raise HTTPException(status_code=404, detail="Session not found")
-    return bot_session.model_dump(mode="json")
+    return bot_session.model_dump(mode="json")  # type: ignore[misc]
 
 
 @router.get("/sessions/{session_id}/bets")
@@ -68,7 +68,7 @@ async def get_bet(bet_id: str, db: AsyncSession = Depends(get_session)) -> dict:
     bet = await get_bothub_bet_by_bet_id(db, bet_id=bet_id)
     if not bet:
         raise HTTPException(status_code=404, detail="Bet not found")
-    return bet.model_dump(mode="json")
+    return bet.model_dump(mode="json")  # type: ignore[misc]
 
 
 @router.get("/bets/ev")

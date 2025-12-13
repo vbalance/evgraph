@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import type { BotSession } from '../types';
 import { fetchSessions } from '../api';
@@ -8,11 +8,7 @@ export default function SessionsList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadSessions();
-  }, []);
-
-  async function loadSessions() {
+  const loadSessions = useCallback(async () => {
     try {
       setLoading(true);
       const data = await fetchSessions();
@@ -22,7 +18,11 @@ export default function SessionsList() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    void loadSessions();
+  }, [loadSessions]);
 
   function formatDateTime(dateStr: string | null) {
     if (!dateStr) return 'N/A';
